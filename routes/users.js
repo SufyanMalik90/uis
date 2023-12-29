@@ -1,13 +1,13 @@
-// routes/users.js
+
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
-// GET route
+
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select('-passwordHash');
     res.json(users);
   } catch (error) {
     console.error(error);
@@ -51,12 +51,16 @@ router.put("/:id", async (req, res) => {
       passwordHash = await bcrypt.hash(password, 10);
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-      name,
-      email,
-      passwordHash,
-      isAdmin: isAdmin || false,
-    });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        name,
+        email,
+        passwordHash,
+        isAdmin: isAdmin,
+      },
+      { new: true }
+    );
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });

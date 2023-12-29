@@ -8,10 +8,14 @@ const PORT = process.env.PORT || 3000;
 const api = process.env.API_URL;
 const app = express();
 
+const loginRouter = require('./routes/login');
 const userRouter = require('./routes/users');
+const authenticateToken = require('./middleware/authMiddleware');
 
 app.use(bodyParser.json());
-app.use(`${api}/users`, userRouter)
+app.use(`${api}/users`, authenticateToken, userRouter);
+app.use(`${api}/login`, loginRouter)
+// app.use(`${api}/users`, userRouter)
 
 
 mongoose.set('strictQuery', false);
