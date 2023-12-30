@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const authenticateToken = require('../middleware/authMiddleware');
 
 
 router.get("/", async (req, res) => {
@@ -32,18 +33,19 @@ router.post("/", async (req, res) => {
       isAdmin: isAdmin || false,
     });
 
-    const savedUser = await newUser.save();
+    await newUser.save();
 
-    res.status(201).json(savedUser);
+    res.status(201).json({ message: "User created successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/", authenticateToken, async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.user.userId;
+
     const { name, email, password, isAdmin } = req.body;
 
     let passwordHash;
@@ -68,7 +70,6 @@ router.put("/:id", async (req, res) => {
 
     res.json({
       message: "User updated successfully",
-      user: updatedUser,
     });
   } catch (error) {
     console.error(error);
@@ -76,15 +77,15 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/", authenticateToken,  async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.user.userId;
 
     const userToDelete = await User.findById(userId);
     if (!userToDelete) {
       return res.status(404).json({ error: "User not found" });
     }
-    
+
     await User.findByIdAndDelete(userId);
 
     res.json({ message: "User deleted successfully" });
